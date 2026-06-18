@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>初練了 FIRST FIT</title>
+<!-- VERSION: 2026-06-18-v29 取消一對二自動延長機制，固定60分鐘 -->
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -458,7 +459,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     </div>
     <div class="adm-panel active" id="adm-overview"><div class="ov-grid" id="adm-ov-grid"></div></div>
     <div class="adm-panel" id="adm-schedule">
-      <div class="pair-info">💡 <strong>一對二配對規則：</strong>人數上限設為 <strong>2</strong> 時，若該時段已滿 2 人，下一個連續時段自動延後 <strong>30 分鐘</strong>開始。<br>例：12:00–13:00 滿 2 人 → 13:00–14:00 自動調整為 <strong>13:30–14:30</strong>（90 分鐘課）。</div>
+      <div class="pair-info">💡 <strong>一對二規則：</strong>人數上限設為 <strong>2</strong> 時，同一時段最多可有 2 位會員一起上課，課程時長維持原本 <strong>60 分鐘</strong>，不會自動延長或調整下一時段。</div>
       <div class="sch-teacher-tabs" id="sch-teacher-tabs"></div>
       <div id="sch-editor"></div>
     </div>
@@ -664,25 +665,17 @@ function addMins(t,mins){
 }
 function countBk(dateStr,teacher,start){const k=sKey(dateStr,teacher,start);const b=bookings[k];if(!b)return 0;return Array.isArray(b)?b.length:1;}
 
-/* PAIRING LOGIC — cap≥2 AND full → next consecutive slot shifts +30min */
+/* PAIRING LOGIC — cap≥2 允許同時段多人，固定60分鐘不延長 */
 function computeAdjSlots(slots,dateStr,teacher){
   const sorted=[...slots].filter(s=>!s.disabled).sort((a,b)=>a.start.localeCompare(b.start));
-  const result=[];let cumulShift=0;
+  const result=[];
   for(let i=0;i<sorted.length;i++){
     const sl=sorted[i];
     const cap=sl.cap||1;
     const cnt=countBk(dateStr,teacher,sl.start);
     const isFull=cnt>=cap;
-    const adjStart=addMins(sl.start,cumulShift);
-    const adjEnd=addMins(sl.end,cumulShift);
-    result.push({...sl,cap,cnt,isFull,adjStart,adjEnd,isAdj:cumulShift>0,shiftMins:cumulShift});
-    // If this slot is a pairing slot (cap>=2) AND full, next gets +30
-    if(cap>=2&&isFull){
-      // Check if next slot is consecutive (starts where this one ends originally)
-      if(i+1<sorted.length&&sorted[i+1].start===sl.end){
-        cumulShift+=30;
-      }
-    }
+    // 不再自動延長時段，固定維持原始時間
+    result.push({...sl,cap,cnt,isFull,adjStart:sl.start,adjEnd:sl.end,isAdj:false,shiftMins:0});
   }
   return result;
 }
@@ -772,7 +765,7 @@ function lookupBookings(){
   if(!active.length){res.innerHTML=`<div style="font-size:12px;color:var(--muted);padding:7px 0;letter-spacing:.07em;">查無預約紀錄</div>`;return;}
   res.innerHTML=active.map(f=>{
     const canC=canCancel24h(f.dateStr,f.start);
-    const dObj=new Date(f.dateStr);const dLbl=`${dObj.getMonth()+1}/${dObj.getDate()}（${DAY_ZH[dObj.getDay()]}）`;
+    const dObj=parseDateStr(f.dateStr);const dLbl=`${dObj.getMonth()+1}/${dObj.getDate()}（${DAY_ZH[dObj.getDay()]}）`;
     return `<div class="lookup-item">
       <div><div class="li-time">${dLbl} ${f.start}</div><div class="li-teacher">${f.teacher} 老師 · 器械皮拉提斯</div></div>
       <div><button class="btn-cancel-own" ${!canC?'disabled':''} onclick="openActModal('memberCancel','${f.key}','${dLbl}','${f.start}','','${f.storedPhone}')">取消</button>
