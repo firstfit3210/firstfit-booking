@@ -387,6 +387,21 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     <label class="fl">Email（選填，收報名確認信）</label>
     <input type="email" class="fi" id="book-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')confirmBooking()">
   </div>
+  <div class="ff" style="background:rgba(214,116,66,.04);border:1px solid rgba(214,116,66,.18);padding:10px 12px;margin-bottom:10px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--orange);margin-bottom:7px;">📋 報名注意事項</div>
+    <div style="font-size:11px;color:var(--ink);line-height:1.85;letter-spacing:.04em;">
+      📅 <strong>取消期限：</strong>課前 8 小時內無法取消<br>
+      ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次，暫停線上預約權限<br>
+      👟 <strong>服裝要求：</strong>請穿著運動服飾與運動鞋<br>
+      🕐 <strong>準時入場：</strong>開課後 5–10 分鐘禁止入場<br>
+      🏥 <strong>身體狀況：</strong>懷孕、舊傷或身體不適請事先告知教練
+    </div>
+    <div style="margin-top:10px;display:flex;align-items:flex-start;gap:7px;">
+      <input type="checkbox" id="agree-terms" style="margin-top:2px;accent-color:var(--green);width:14px;height:14px;flex-shrink:0;">
+      <label for="agree-terms" style="font-size:11px;color:var(--ink);cursor:pointer;line-height:1.5;">我已閱讀並同意以上注意事項</label>
+    </div>
+    <div class="fi-err" id="agree-err" style="margin-top:4px;"></div>
+  </div>
   <div class="m-btns">
     <button class="btn-ok" id="book-ok-btn" onclick="confirmBooking()">確認報名</button>
     <button class="btn-no" onclick="closeBookingModal()">取消</button>
@@ -575,6 +590,8 @@ function openBookModal(dateStr,classId,name,coach,start,end,cap){
   document.getElementById('book-phone').value='';
   document.getElementById('book-email').value='';
   document.getElementById('book-phone-err').textContent='';
+  const agreeBox=document.getElementById('agree-terms');if(agreeBox)agreeBox.checked=false;
+  const agreeErr=document.getElementById('agree-err');if(agreeErr)agreeErr.textContent='';
   const btn=document.getElementById('book-ok-btn');
   btn.disabled=false;btn.style.opacity='1';btn.textContent='確認報名';
   document.getElementById('booking-modal').classList.add('open');
@@ -591,6 +608,10 @@ async function confirmBooking(){
   if(!name){showToast('請輸入姓名');return;}
   if(!TW_PHONE.test(phone)){perr.textContent='請輸入正確台灣手機格式（09開頭，共10碼）';return;}
   perr.textContent='';
+  const agreeChk=document.getElementById('agree-terms');
+  const agreeErrEl=document.getElementById('agree-err');
+  if(agreeChk&&!agreeChk.checked){if(agreeErrEl)agreeErrEl.textContent='請先勾選同意注意事項';return;}
+  if(agreeErrEl)agreeErrEl.textContent='';
   if(!pendingBook)return;
   const{dateStr,classId,name:cName,coach,start,end,cap}=pendingBook;
   if(isBlocked(phone)){showToast('此號碼已被停止預約資格，請洽門市');closeBookingModal();return;}
