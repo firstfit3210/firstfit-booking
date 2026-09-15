@@ -384,7 +384,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     <div class="fi-err" id="book-phone-err"></div>
   </div>
   <div class="ff">
-    <label class="fl">Email（選填，收報名確認信）</label>
+    <label class="fl">Email（必填，收報名確認信）</label>
     <input type="email" class="fi" id="book-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')confirmBooking()">
   </div>
   <div class="ff" style="background:rgba(214,116,66,.04);border:1px solid rgba(214,116,66,.18);padding:10px 12px;margin-bottom:10px;">
@@ -604,6 +604,10 @@ async function confirmBooking(){
   const name=document.getElementById('book-name').value.trim();
   const phone=document.getElementById('book-phone').value.trim();
   const email=document.getElementById('book-email').value.trim();
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    document.getElementById('book-phone-err').textContent='';
+    showToast('請輸入正確的 Email 格式');return;
+  }
   const perr=document.getElementById('book-phone-err');
   if(!name){showToast('請輸入姓名');return;}
   if(!TW_PHONE.test(phone)){perr.textContent='請輸入正確台灣手機格式（09開頭，共10碼）';return;}
