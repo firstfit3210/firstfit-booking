@@ -78,7 +78,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .cc-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:.05em;}
 .cc-coach{font-size:13px;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;}
 .cc-time{font-family:var(--f-num);font-size:15px;color:var(--ink);margin-bottom:6px;}
-.cc-slots{font-size:13px;letter-spacing:.04em;display:flex;align-items:center;gap:4px;}
+.cc-slots{font-size:13px;letter-spacing:.04em;display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
 .cc-dot{width:4px;height:4px;border-radius:50%;}
 .cc-open .cc-dot{background:var(--green);}.cc-open .cc-slots{color:var(--green);}
 .cc-full{cursor:not-allowed;opacity:.6;}.cc-full .cc-dot{background:var(--orange);}.cc-full .cc-slots{color:var(--orange);}
@@ -532,7 +532,7 @@ function renderMemberView(){
         <div class="cc-name">${c.name}</div>
         <div class="cc-coach">教練：${c.coach}</div>
         <div class="cc-time">${c.start} – ${c.end}</div>
-        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':full?'已額滿':`已預約 ${cnt} 位，剩餘 ${rem} 位名額`}</div>
+        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':full?'已額滿':`已預約 ${cnt} 位</div><div class="cc-slots cc-open"><span class="cc-dot"></span>剩餘 ${rem} 位名額`}</div>
       </div>`;
     });
     html+=`</div></div>`;
