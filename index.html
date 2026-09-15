@@ -70,15 +70,15 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .wn-btn:hover{color:var(--ink);}
 .wn-label{font-family:var(--f-num);font-size:12px;color:var(--ink);}
 .day-sect{margin-bottom:20px;}
-.day-hd{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--muted);padding:5px 0 4px;border-bottom:1px solid var(--border);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.day-hd{font-size:14px;font-weight:700;letter-spacing:.1em;color:var(--muted);padding:6px 0 5px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .day-hd::before{content:'';width:7px;height:1px;background:var(--muted);opacity:.45;}
 .class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
-.class-card{border:1px solid var(--border);padding:12px 13px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;}
+.class-card{border:1px solid var(--border);padding:16px 16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;}
 .class-card:hover:not(.cc-full):not(.cc-past):not(.cc-closed){border-color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.07);}
-.cc-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px;letter-spacing:.05em;}
-.cc-coach{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;}
-.cc-time{font-family:var(--f-num);font-size:13px;color:var(--ink);margin-bottom:5px;}
-.cc-slots{font-size:10px;letter-spacing:.06em;display:flex;align-items:center;gap:3px;}
+.cc-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:.05em;}
+.cc-coach{font-size:13px;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;}
+.cc-time{font-family:var(--f-num);font-size:15px;color:var(--ink);margin-bottom:6px;}
+.cc-slots{font-size:13px;letter-spacing:.04em;display:flex;align-items:center;gap:4px;}
 .cc-dot{width:4px;height:4px;border-radius:50%;}
 .cc-open .cc-dot{background:var(--green);}.cc-open .cc-slots{color:var(--green);}
 .cc-full{cursor:not-allowed;opacity:.6;}.cc-full .cc-dot{background:var(--orange);}.cc-full .cc-slots{color:var(--orange);}
@@ -532,7 +532,7 @@ function renderMemberView(){
         <div class="cc-name">${c.name}</div>
         <div class="cc-coach">教練：${c.coach}</div>
         <div class="cc-time">${c.start} – ${c.end}</div>
-        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':full?'已額滿':`剩 ${rem}/${cap} 位`}</div>
+        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':full?'已額滿':`已預約 ${cnt} 位，剩餘 ${rem} 位名額`}</div>
       </div>`;
     });
     html+=`</div></div>`;
