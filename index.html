@@ -391,7 +391,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--orange);margin-bottom:7px;">📋 報名注意事項</div>
     <div style="font-size:11px;color:var(--ink);line-height:1.85;letter-spacing:.04em;">
       📅 <strong>取消期限：</strong>課前 8 小時內無法取消<br>
-      ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次及課程間無故中途離場，暫停線上預約權限<br>
+      ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次及課間中途無故離場，暫停線上預約權限<br>
       👟 <strong>服裝要求：</strong>請穿著運動服飾與運動鞋<br>
       🕐 <strong>準時入場：</strong>開課後 5–10 分鐘禁止入場<br>
       🏥 <strong>身體狀況：</strong>懷孕、舊傷或身體不適請事先告知教練
@@ -483,13 +483,27 @@ function slotDT(dateStr,timeStr){
 }
 function isExpired(dateStr,t){return slotDT(dateStr,t)<new Date();}
 function isWithinTwoWeeks(date){
-  // 本週一
-  const now=new Date();now.setHours(0,0,0,0);
-  const day=now.getDay()||7; // 週日=7
-  const thisMonday=new Date(now);thisMonday.setDate(now.getDate()-day+1);
-  // 下週日（兩週結束）
-  const twoWeekEnd=new Date(thisMonday);twoWeekEnd.setDate(thisMonday.getDate()+13);twoWeekEnd.setHours(23,59,59,999);
-  return date>=thisMonday&&date<=twoWeekEnd;
+  const now=new Date();
+  // 本週一（00:00）
+  const dayOfWeek=now.getDay()||7; // 週日=7
+  const thisMonday=new Date(now);thisMonday.setDate(now.getDate()-dayOfWeek+1);thisMonday.setHours(0,0,0,0);
+  // 本週日（結束）
+  const thisSunday=new Date(thisMonday);thisSunday.setDate(thisMonday.getDate()+6);thisSunday.setHours(23,59,59,999);
+  // 下週日（結束）
+  const nextSunday=new Date(thisMonday);nextSunday.setDate(thisMonday.getDate()+13);nextSunday.setHours(23,59,59,999);
+
+  // 判斷今天是否為週一且已過12:00
+  const isMonday=now.getDay()===1;
+  const isPastNoon=now.getHours()>=12;
+  const nextWeekOpen=isMonday&&isPastNoon; // 週一12:00後才開放下週
+
+  if(nextWeekOpen){
+    // 本週＋下週
+    return date>=thisMonday&&date<=nextSunday;
+  } else {
+    // 只有本週
+    return date>=thisMonday&&date<=thisSunday;
+  }
 }
 function isBefore8h(dateStr,t){return(slotDT(dateStr,t)-new Date())<8*3600000;}
 function canCancel(dateStr,t){return(slotDT(dateStr,t)-new Date())>8*3600000;}
@@ -511,7 +525,16 @@ function showScreen(id){
 function changeWeek(d){
   const next=currentWeek+d;
   if(next<0){showToast('已是最早的週次');return;}
-  if(next>1){showToast('目前僅開放本週及下週預約');return;}
+  // 判斷最多可切換到哪週
+  const now=new Date();
+  const isMonday=now.getDay()===1;
+  const isPastNoon=now.getHours()>=12;
+  const maxWeek=(isMonday&&isPastNoon)?1:0;
+  if(next>maxWeek){
+    if(maxWeek===0){showToast('下週預約將於週一中午12:00開放');}
+    else{showToast('目前僅開放本週及下週預約');}
+    return;
+  }
   currentWeek=next;renderMemberView();
 }
 function renderMemberView(){
