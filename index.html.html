@@ -85,6 +85,10 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .cc-past{cursor:not-allowed;opacity:.35;}.cc-past .cc-dot{background:var(--muted);}.cc-past .cc-slots{color:var(--muted);}
 .cc-closed{cursor:not-allowed;opacity:.38;background:rgba(0,0,0,.02);}.cc-closed .cc-dot{background:var(--muted);}.cc-closed .cc-slots{color:var(--muted);}
 .cc-empty{text-align:center;padding:28px 0;font-size:12px;color:var(--muted);letter-spacing:.1em;}
+.cc-waitlist{cursor:pointer;border-color:rgba(214,116,66,.3);background:rgba(214,116,66,.03);}
+.cc-waitlist:hover{border-color:var(--orange);box-shadow:0 2px 10px rgba(214,116,66,.1);}
+.cc-waitlist .cc-slots{color:var(--orange);}
+.waitlist-count{font-size:11px;color:var(--orange);margin-top:3px;letter-spacing:.04em;}
 
 /* MY BOOKINGS */
 #my-bookings.active{display:flex;background:var(--bg);align-items:center;justify-content:center;}
@@ -373,6 +377,29 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
   </div>
 </div>
 
+<!-- WAITLIST MODAL -->
+<div class="overlay" id="waitlist-modal"><div class="m-box"><div class="m-inner">
+  <div class="m-title">加入候補名單</div>
+  <div class="m-desc" id="wl-class-info"></div>
+  <div style="background:rgba(214,116,66,.06);border:1px solid rgba(214,116,66,.18);padding:8px 11px;margin-bottom:12px;font-size:11px;color:var(--orange);line-height:1.7;">
+    ⚠ 候補不等於預約。有名額釋出時，系統將 Email 通知您，請儘速前來完成報名。
+  </div>
+  <div class="ff"><label class="fl">姓名</label><input type="text" class="fi" id="wl-name" placeholder="請輸入您的姓名"></div>
+  <div class="ff">
+    <label class="fl">手機號碼（台灣）</label>
+    <input type="tel" class="fi fi-phone" id="wl-phone" placeholder="09xxxxxxxx" maxlength="10">
+    <div class="fi-err" id="wl-phone-err"></div>
+  </div>
+  <div class="ff">
+    <label class="fl">Email（必填，候補通知用）</label>
+    <input type="email" class="fi" id="wl-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')confirmWaitlist()">
+  </div>
+  <div class="m-btns">
+    <button class="btn-ok" id="wl-ok-btn" onclick="confirmWaitlist()" style="background:var(--orange);">加入候補</button>
+    <button class="btn-no" onclick="closeWaitlistModal()">取消</button>
+  </div>
+</div></div></div>
+
 <!-- BOOKING MODAL -->
 <div class="overlay" id="booking-modal"><div class="m-box"><div class="m-inner">
   <div class="m-title">報名課程</div>
@@ -391,7 +418,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--orange);margin-bottom:7px;">📋 報名注意事項</div>
     <div style="font-size:11px;color:var(--ink);line-height:1.85;letter-spacing:.04em;">
       📅 <strong>取消期限：</strong>課前 8 小時內無法取消<br>
-      ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次及課間中途無故離場，暫停線上預約權限<br>
+      ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次，暫停線上預約權限<br>
       👟 <strong>服裝要求：</strong>請穿著運動服飾與運動鞋<br>
       🕐 <strong>準時入場：</strong>開課後 5–10 分鐘禁止入場<br>
       🏥 <strong>身體狀況：</strong>懷孕、舊傷或身體不適請事先告知教練
@@ -438,6 +465,7 @@ const ABSENT_LIMIT=3; // 連續未到幾次封鎖
 let classes=[];      // 課程清單（從 Sheets 載入）
 let bookings={};     // key -> [{name,phone,time}]
 let blocklist={};    // phone -> {name,count,blocked}
+let waitlist={};     // key -> [{name,phone,email}]
 let currentWeek=0;
 let pendingBook=null,pendingAct=null;
 let isSubmitting=false;
@@ -461,6 +489,7 @@ async function loadAll(){
       classes=r.classes||[];
       bookings=r.bookings||{};
       blocklist=r.blocklist||{};
+      waitlist=r.waitlist||{};
     }
   }catch(e){console.error(e);}
   hideLoading();
@@ -562,17 +591,25 @@ function renderMemberView(){
       // 兩週限制：只有本週和下週的課程可預約
       const notOpen=!past&&!isWithinTwoWeeks(date);
       const open=!past&&!closed&&!full&&!notOpen;
+      const canWaitlist=!past&&!closed&&!notOpen&&full; // 額滿時可候補
+      const key=slotKey(dKey,c.id);
+      const wlCount=(waitlist[key]||[]).length;
       let cls='class-card cc-open',status='可報名',dotCls='cc-open';
       if(past){cls='class-card cc-past';status='已結束';}
       else if(notOpen){cls='class-card cc-closed';status='尚未開放';}
       else if(closed){cls='class-card cc-closed';status='截止報名';}
-      else if(full){cls='class-card cc-full';status='已額滿';}
-      const clk=open?`onclick="openBookModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}',${cap})"` :'';
+      else if(full&&!canWaitlist){cls='class-card cc-full';status='已額滿';}
+      else if(canWaitlist){cls='class-card cc-waitlist';status='已額滿';}
+      const clk=open?`onclick="openBookModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}',${cap})"`:
+                  canWaitlist?`onclick="openWaitlistModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}')"`:''';
+      const wlInfo=canWaitlist&&wlCount>0?`<div class="waitlist-count">候補中：${wlCount} 人</div>`:'';
+      const wlBtn=canWaitlist?`<div style="font-size:12px;color:var(--orange);font-weight:700;margin-top:4px;">＋ 加入候補</div>`:'';
       html+=`<div class="${cls}" ${clk}>
         <div class="cc-name">${c.name}</div>
         <div class="cc-coach">教練：${c.coach}</div>
         <div class="cc-time">${c.start} – ${c.end}</div>
-        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':full?'已額滿':`已預約 ${cnt} 位</div><div class="cc-slots cc-open"><span class="cc-dot"></span>剩餘 ${rem} 位名額`}</div>
+        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':notOpen?'尚未開放':full?'已額滿':`已預約 ${cnt} 位</div><div class="cc-slots cc-open"><span class="cc-dot"></span>剩餘 ${rem} 位名額`}</div>
+        ${wlInfo}${wlBtn}
       </div>`;
     });
     html+=`</div></div>`;
@@ -605,9 +642,22 @@ async function mbSearch(){
       }
     });
   });
+  // 也找候補紀錄
+  const wlFound=[];
+  Object.entries(waitlist).forEach(([key,wlList])=>{
+    (wlList||[]).forEach(w=>{
+      if(normalizePhoneJS(w.phone)===target){
+        const[dateStr,classId]=key.split('__');
+        const cls=classes.find(c=>c.id===classId)||{name:classId,coach:'',start:'',end:''};
+        wlFound.push({key,dateStr,cls,name:w.name,storedPhone:w.phone,isWaitlist:true});
+      }
+    });
+  });
+
   const active=found.filter(f=>!isExpired(f.dateStr,f.cls.start)).sort((a,b)=>slotDT(a.dateStr,a.cls.start)-slotDT(b.dateStr,b.cls.start));
   if(!active.length){res.innerHTML=`<div class="mb-empty">查無有效預約紀錄</div>`;return;}
-  res.innerHTML=active.map(f=>{
+  const activeWl=wlFound.filter(f=>!isExpired(f.dateStr,f.cls.start));
+  res.innerHTML=[...active.map(f=>{
     const canC=canCancel(f.dateStr,f.cls.start);
     const dObj=parseDateStr(f.dateStr);
     const dLbl=`${dObj.getMonth()+1}/${dObj.getDate()}（${DAY_ZH[dObj.getDay()]}）`;
@@ -619,7 +669,17 @@ async function mbSearch(){
         ${!canC?`<span class="mb-cancel-note">距開課不足8小時，無法取消</span>`:''}
       </div>
     </div>`;
-  }).join('');
+  }), ...activeWl.map(f=>{
+    const dObj=parseDateStr(f.dateStr);
+    const dLbl=`${dObj.getMonth()+1}/${dObj.getDate()}（${DAY_ZH[dObj.getDay()]}）`;
+    return `<div class="mb-item" style="border-color:rgba(214,116,66,.25);">
+      <div class="mb-item-name" style="color:var(--orange);">【候補中】${f.cls.name}</div>
+      <div class="mb-item-info">教練：${f.cls.coach}　${dLbl} ${f.cls.start}–${f.cls.end}</div>
+      <div class="mb-item-row">
+        <button class="btn-mb-cancel" onclick="cancelWaitlist('${f.key}','${f.storedPhone}')">取消候補</button>
+      </div>
+    </div>`;
+  })].join('');
 }
 
 // ── BOOK MODAL ───────────────────────────────────────
@@ -848,8 +908,20 @@ function renderBlockList(){
     </div>`).join('');
 }
 
+async function cancelWaitlist(key,phone){
+  if(!confirm('確認取消候補？'))return;
+  showLoading();
+  const r=await api('removeWaitlist',{key,phone});
+  hideLoading();
+  if(r.ok){
+    showToast('✓ 已取消候補');
+    if(waitlist[key])waitlist[key]=waitlist[key].filter(w=>normalizePhoneJS(w.phone)!==normalizePhoneJS(phone));
+    mbSearch();
+  } else showToast('❌ 取消失敗：'+(r.msg||''));
+}
+
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600);}
-['booking-modal','action-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget){if(id==='booking-modal')closeBookingModal();else closeActionModal();}});});
+['booking-modal','action-modal','waitlist-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget){if(id==='booking-modal')closeBookingModal();else closeActionModal();}});});
 document.addEventListener('DOMContentLoaded',()=>{});
 </script>
 </body>
