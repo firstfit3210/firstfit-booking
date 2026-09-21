@@ -2,7 +2,9 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>初練了 FIRST FIT</title>
 <!-- VERSION: 2026-09-21-v33 候補機制+課前提醒 -->
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
@@ -33,7 +35,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .l-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.65;}
 .l-badge-text{font-size:12px;color:var(--ink);letter-spacing:.12em;}
 .l-btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
-.btn-l{padding:11px 28px;font-size:13px;font-weight:700;letter-spacing:.15em;border:none;cursor:pointer;transition:all .26s;}
+.btn-l{padding:11px 28px;font-size:13px;font-weight:700;letter-spacing:.15em;border:none;cursor:pointer;transition:all .26s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .btn-l-primary{background:var(--green);color:var(--cream);}
 .btn-l-primary:hover{background:var(--green-dk);transform:translateY(-2px);box-shadow:0 7px 18px rgba(0,160,110,.18);}
 .btn-l-secondary{background:transparent;color:var(--ink);border:1px solid rgba(0,160,110,.28);}
@@ -67,7 +69,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .day-hd{font-size:14px;font-weight:700;letter-spacing:.1em;color:var(--muted);padding:6px 0 5px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .day-hd::before{content:'';width:7px;height:1px;background:var(--muted);opacity:.45;}
 .class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
-.class-card{border:1px solid var(--border);padding:16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;display:block;border-radius:0;-webkit-appearance:none;appearance:none;}
+.class-card{border:1px solid var(--border);padding:16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;display:block;border-radius:0;-webkit-appearance:none;appearance:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 .class-card:hover:not(.cc-full):not(.cc-past):not(.cc-closed){border-color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.07);}
 .cc-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:.05em;}
 .cc-coach{font-size:13px;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;}
@@ -449,8 +451,16 @@ let isSubmitting=false;
 async function api(action,params={}){
   const body=JSON.stringify({action,...params});
   try{
-    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body});
-    return JSON.parse(await res.text());
+    const res=await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body,
+      mode:'cors',
+      cache:'no-cache',
+      redirect:'follow',
+    });
+    const text=await res.text();
+    return JSON.parse(text);
   }catch(e){console.error('API error:',e);return{ok:false,msg:e.toString()};}
 }
 function showLoading(){let el=document.getElementById('loading-bar');if(!el){el=document.createElement('div');el.id='loading-bar';el.style.cssText='position:fixed;top:0;left:0;right:0;height:2px;background:var(--green);z-index:9999;';document.body.appendChild(el);}el.style.display='block';}
@@ -903,7 +913,17 @@ function showToast(msg){const el=document.getElementById('toast');el.textContent
     }
   });
 });
-document.addEventListener('DOMContentLoaded',()=>{});
+// 相容 LINE WebView — 確保 DOM 載入後才執行
+function onReady(fn){
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',fn);
+  } else {
+    fn();
+  }
+}
+onReady(function(){
+  // 初始化完成
+});
 // 用 event delegation 處理課程卡片點擊（相容手機 touch）
 document.addEventListener('click',function(e){
   const card=e.target.closest('.class-card');
