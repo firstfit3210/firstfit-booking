@@ -67,7 +67,7 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .day-hd{font-size:14px;font-weight:700;letter-spacing:.1em;color:var(--muted);padding:6px 0 5px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .day-hd::before{content:'';width:7px;height:1px;background:var(--muted);opacity:.45;}
 .class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
-.class-card{border:1px solid var(--border);padding:16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;}
+.class-card{border:1px solid var(--border);padding:16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;display:block;border-radius:0;-webkit-appearance:none;appearance:none;}
 .class-card:hover:not(.cc-full):not(.cc-past):not(.cc-closed){border-color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.07);}
 .cc-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:.05em;}
 .cc-coach{font-size:13px;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;}
@@ -558,12 +558,12 @@ function renderMemberView(){
         :closed?'<div class="cc-slots"><span class="cc-dot"></span>截止報名</div>'
         :full?`<div class="cc-slots">已額滿</div>${wlCount>0?`<div class="waitlist-count">候補中：${wlCount} 人</div>`:''}<div style="font-size:12px;color:var(--orange);font-weight:700;margin-top:4px;">＋ 加入候補</div>`
         :`<div class="cc-slots">已預約 ${cnt} 位</div><div class="cc-slots">剩餘 ${rem} 位名額</div>`;
-      html+=`<div class="${cls}" ${clkData}>
+      html+=`<button type="button" class="${cls}" ${clkData} style="width:100%;text-align:left;font-family:inherit;">
         <div class="cc-name">${c.name}</div>
         <div class="cc-coach">教練：${c.coach}</div>
         <div class="cc-time">${c.start} – ${c.end}</div>
         ${slotsHtml}
-      </div>`;
+      </button>`;
     });
     html+=`</div></div>`;
   });
