@@ -549,17 +549,16 @@ function renderMemberView(){
       else if(closed)cls='class-card cc-closed';
       else if(canWaitlist)cls='class-card cc-waitlist';
       else if(full)cls='class-card cc-full';
-      const clk=open
-        ? `onclick="openBookModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}',${cap})"`
-        : canWaitlist
-          ? `onclick="openWaitlistModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}')"`
-          : '';
+      const clkType=open?'book':canWaitlist?'waitlist':'';
+      const clkData=open||canWaitlist
+        ? `data-action="${clkType}" data-date="${dKey}" data-id="${c.id}" data-name="${c.name}" data-coach="${c.coach}" data-start="${c.start}" data-end="${c.end}" data-cap="${cap}"`
+        : '';
       const slotsHtml=past?'<div class="cc-slots"><span class="cc-dot"></span>已結束</div>'
         :notOpen?'<div class="cc-slots"><span class="cc-dot"></span>尚未開放</div>'
         :closed?'<div class="cc-slots"><span class="cc-dot"></span>截止報名</div>'
         :full?`<div class="cc-slots">已額滿</div>${wlCount>0?`<div class="waitlist-count">候補中：${wlCount} 人</div>`:''}<div style="font-size:12px;color:var(--orange);font-weight:700;margin-top:4px;">＋ 加入候補</div>`
         :`<div class="cc-slots">已預約 ${cnt} 位</div><div class="cc-slots">剩餘 ${rem} 位名額</div>`;
-      html+=`<div class="${cls}" ${clk}>
+      html+=`<div class="${cls}" ${clkData}>
         <div class="cc-name">${c.name}</div>
         <div class="cc-coach">教練：${c.coach}</div>
         <div class="cc-time">${c.start} – ${c.end}</div>
@@ -905,6 +904,19 @@ function showToast(msg){const el=document.getElementById('toast');el.textContent
   });
 });
 document.addEventListener('DOMContentLoaded',()=>{});
+// 用 event delegation 處理課程卡片點擊（相容手機 touch）
+document.addEventListener('click',function(e){
+  const card=e.target.closest('.class-card');
+  if(!card)return;
+  const action=card.dataset.action;
+  if(!action)return;
+  const d=card.dataset;
+  if(action==='book'){
+    openBookModal(d.date,d.id,d.name,d.coach,d.start,d.end,parseInt(d.cap));
+  } else if(action==='waitlist'){
+    openWaitlistModal(d.date,d.id,d.name,d.coach,d.start,d.end);
+  }
+});
 </script>
 </body>
 </html>
