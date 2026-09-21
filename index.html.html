@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>初練了 FIRST FIT</title>
-<!-- VERSION: 2026-07-23-v32 全新團課預約系統 -->
+<!-- VERSION: 2026-09-21-v33 候補機制+課前提醒 -->
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -20,21 +20,15 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .screen{display:none;min-height:100vh;}
 .screen.active{display:block;}
 #landing.active,#admin-login.active{display:flex;}
+#my-bookings.active{display:flex;background:var(--bg);align-items:center;justify-content:center;}
 
 /* LANDING */
 #landing{background:var(--cream);flex-direction:column;position:relative;overflow:hidden;}
-.l-dots{position:absolute;inset:0;pointer-events:none;
-  background-image:radial-gradient(circle,rgba(0,160,110,.11) 1px,transparent 1px);
-  background-size:26px 26px;
-  mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 30%,transparent 100%);
-  -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 30%,transparent 100%);}
+.l-dots{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(0,160,110,.11) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 30%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 30%,transparent 100%);}
 .l-blob1{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(0,160,110,.07) 0%,transparent 70%);top:-150px;left:-140px;pointer-events:none;}
 .l-blob2{position:absolute;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(214,116,66,.055) 0%,transparent 70%);bottom:-80px;right:-60px;pointer-events:none;}
 .l-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:56px 24px;text-align:center;}
 .l-logo-img{width:clamp(200px,42vw,340px);margin-bottom:18px;}
-.l-divider{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
-.l-div-line{flex:1;max-width:52px;height:1px;background:rgba(0,160,110,.22);}
-.l-div-text{font-size:12px;letter-spacing:.2em;color:var(--muted);}
 .l-class-badge{display:inline-flex;align-items:center;gap:7px;margin-bottom:24px;padding:7px 17px;border:1px solid rgba(0,160,110,.2);background:rgba(0,160,110,.04);}
 .l-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.65;}
 .l-badge-text{font-size:12px;color:var(--ink);letter-spacing:.12em;}
@@ -57,41 +51,40 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 /* PAGE HEADER */
 .pg-header{background:var(--bg);padding:0 18px;display:flex;align-items:stretch;border-bottom:1px solid var(--border);}
 .pg-accent{width:2px;background:var(--green);flex-shrink:0;opacity:.38;}
-.pg-back{background:none;border:none;border-right:1px solid var(--border);cursor:pointer;color:var(--muted);font-size:14px;padding:11px 13px;transition:color .18s;}
+.pg-back{background:none;border:none;border-right:1px solid var(--border);cursor:pointer;color:var(--muted);font-size:14px;padding:11px 13px;}
 .pg-back:hover{color:var(--ink);}
 .pg-logo{height:28px;margin:9px 12px;object-fit:contain;}
 .pg-sub{font-size:11px;color:var(--muted);letter-spacing:.09em;align-self:center;}
 
-/* MEMBER BOOKING VIEW */
+/* MEMBER VIEW */
 #member-view{background:var(--bg);}
 .mv-wrap{max-width:960px;margin:0 auto;padding:20px;}
 .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding:7px 13px;background:var(--card);border:1px solid var(--border);}
-.wn-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;padding:2px 7px;transition:color .18s;font-family:var(--f-num);}
+.wn-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;padding:2px 7px;font-family:var(--f-num);}
 .wn-btn:hover{color:var(--ink);}
 .wn-label{font-family:var(--f-num);font-size:12px;color:var(--ink);}
 .day-sect{margin-bottom:20px;}
 .day-hd{font-size:14px;font-weight:700;letter-spacing:.1em;color:var(--muted);padding:6px 0 5px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .day-hd::before{content:'';width:7px;height:1px;background:var(--muted);opacity:.45;}
 .class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
-.class-card{border:1px solid var(--border);padding:16px 16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;}
+.class-card{border:1px solid var(--border);padding:16px;background:var(--card);cursor:pointer;transition:all .18s;position:relative;}
 .class-card:hover:not(.cc-full):not(.cc-past):not(.cc-closed){border-color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.07);}
 .cc-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:.05em;}
 .cc-coach{font-size:13px;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;}
 .cc-time{font-family:var(--f-num);font-size:15px;color:var(--ink);margin-bottom:6px;}
 .cc-slots{font-size:13px;letter-spacing:.04em;display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
 .cc-dot{display:none;}
-.cc-open .cc-dot{background:var(--green);}.cc-open .cc-slots{color:var(--green);}
-.cc-full{cursor:not-allowed;opacity:.6;}.cc-full .cc-dot{background:var(--orange);}.cc-full .cc-slots{color:var(--orange);}
-.cc-past{cursor:not-allowed;opacity:.35;}.cc-past .cc-dot{background:var(--muted);}.cc-past .cc-slots{color:var(--muted);}
-.cc-closed{cursor:not-allowed;opacity:.38;background:rgba(0,0,0,.02);}.cc-closed .cc-dot{background:var(--muted);}.cc-closed .cc-slots{color:var(--muted);}
-.cc-empty{text-align:center;padding:28px 0;font-size:12px;color:var(--muted);letter-spacing:.1em;}
+.cc-open .cc-slots{color:var(--green);}
+.cc-full{cursor:not-allowed;opacity:.6;}.cc-full .cc-slots{color:var(--orange);}
+.cc-past{cursor:not-allowed;opacity:.35;}.cc-past .cc-slots{color:var(--muted);}
+.cc-closed{cursor:not-allowed;opacity:.38;}.cc-closed .cc-slots{color:var(--muted);}
 .cc-waitlist{cursor:pointer;border-color:rgba(214,116,66,.3);background:rgba(214,116,66,.03);}
 .cc-waitlist:hover{border-color:var(--orange);box-shadow:0 2px 10px rgba(214,116,66,.1);}
 .cc-waitlist .cc-slots{color:var(--orange);}
 .waitlist-count{font-size:11px;color:var(--orange);margin-top:3px;letter-spacing:.04em;}
+.cc-empty{text-align:center;padding:28px 0;font-size:12px;color:var(--muted);letter-spacing:.1em;}
 
 /* MY BOOKINGS */
-#my-bookings.active{display:flex;background:var(--bg);align-items:center;justify-content:center;}
 .mb-outer{width:100%;max-width:480px;padding:20px;}
 .mb-box{background:var(--card);border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,.07);}
 .mb-topbar{height:2px;background:linear-gradient(to right,var(--green),var(--orange-lt),transparent);}
@@ -100,24 +93,24 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .mb-title{font-size:15px;font-weight:700;letter-spacing:.1em;color:var(--ink);margin-bottom:4px;}
 .mb-sub{font-family:var(--f-en);font-style:italic;font-size:11px;letter-spacing:.18em;color:var(--muted);margin-bottom:20px;text-transform:uppercase;}
 .mb-phone-row{display:flex;gap:7px;margin-bottom:8px;}
-.mb-phone-input{flex:1;padding:9px 11px;border:1px solid var(--border);background:var(--bg);font-family:var(--f-num);font-size:13px;color:var(--ink);outline:none;transition:border-color .18s;}
+.mb-phone-input{flex:1;padding:9px 11px;border:1px solid var(--border);background:var(--bg);font-family:var(--f-num);font-size:13px;color:var(--ink);outline:none;}
 .mb-phone-input:focus{border-color:var(--ink);}
 .mb-phone-err{font-size:11px;color:var(--orange);margin-bottom:8px;min-height:14px;letter-spacing:.05em;}
-.btn-mb-search{padding:9px 16px;background:var(--green);color:white;border:none;font-size:12px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .18s;}
+.btn-mb-search{padding:9px 16px;background:var(--green);color:white;border:none;font-size:12px;font-weight:700;letter-spacing:.1em;cursor:pointer;}
 .btn-mb-search:hover{background:var(--green-dk);}
 .mb-result{margin-top:4px;}
 .mb-item{padding:10px 12px;border:1px solid var(--border);margin-bottom:5px;background:var(--bg);}
 .mb-item-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;}
 .mb-item-info{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;}
-.mb-item-row{display:flex;align-items:center;justify-content:space-between;gap:7px;}
-.btn-mb-cancel{padding:4px 10px;background:transparent;border:1px solid rgba(214,116,66,.3);color:var(--orange);font-size:11px;letter-spacing:.06em;cursor:pointer;transition:all .16s;flex-shrink:0;}
+.mb-item-row{display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;}
+.btn-mb-cancel{padding:4px 10px;background:transparent;border:1px solid rgba(214,116,66,.3);color:var(--orange);font-size:11px;cursor:pointer;}
 .btn-mb-cancel:hover{background:var(--orange-dim);}
 .btn-mb-cancel:disabled{opacity:.3;cursor:not-allowed;}
-.mb-cancel-note{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.04em;}
+.mb-cancel-note{font-size:10px;color:var(--muted);letter-spacing:.04em;}
 .mb-empty{text-align:center;padding:24px 0;font-size:12px;color:var(--muted);letter-spacing:.09em;}
 .mb-back{display:block;margin-top:16px;font-family:var(--f-en);font-style:italic;font-size:11px;letter-spacing:.18em;color:var(--muted);cursor:pointer;border:none;background:none;text-transform:uppercase;}
 .mb-back:hover{color:var(--ink);}
-.blocked-notice{background:rgba(214,116,66,.06);border:1px solid rgba(214,116,66,.25);border-left:3px solid var(--orange);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--orange);letter-spacing:.07em;line-height:1.7;}
+.blocked-notice{background:rgba(214,116,66,.06);border:1px solid rgba(214,116,66,.25);border-left:3px solid var(--orange);padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--orange);line-height:1.7;}
 
 /* ADMIN LOGIN */
 #admin-login{background:var(--bg);align-items:center;justify-content:center;}
@@ -128,15 +121,15 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .login-logo{height:50px;margin-bottom:12px;object-fit:contain;}
 .login-sub{font-family:var(--f-en);font-style:italic;font-size:11px;letter-spacing:.2em;color:var(--muted);margin-bottom:24px;text-transform:uppercase;}
 .f-lbl{display:block;font-size:10px;font-weight:600;letter-spacing:.15em;color:var(--muted);margin-bottom:5px;text-align:left;}
-.f-pw{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);color:var(--ink);font-family:var(--f-num);font-size:13px;outline:none;margin-bottom:11px;transition:border-color .18s;}
+.f-pw{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);color:var(--ink);font-family:var(--f-num);font-size:13px;outline:none;margin-bottom:11px;}
 .f-pw:focus{border-color:var(--ink);}
-.btn-login{width:100%;padding:10px;background:var(--green);color:var(--cream);border:none;font-size:13px;font-weight:700;letter-spacing:.14em;cursor:pointer;transition:all .2s;}
+.btn-login{width:100%;padding:10px;background:var(--green);color:var(--cream);border:none;font-size:13px;font-weight:700;letter-spacing:.14em;cursor:pointer;}
 .btn-login:hover{background:var(--green-dk);}
 .login-err{color:var(--orange);font-size:11px;letter-spacing:.06em;margin-top:8px;min-height:15px;}
 .login-back{display:block;margin-top:16px;font-family:var(--f-en);font-style:italic;font-size:11px;letter-spacing:.18em;color:var(--muted);cursor:pointer;border:none;background:none;text-transform:uppercase;}
 .login-back:hover{color:var(--ink);}
 
-/* ADMIN DASHBOARD */
+/* ADMIN */
 #admin-view{background:var(--bg);}
 .adm-header{background:var(--bg);padding:0 14px;display:flex;align-items:stretch;justify-content:space-between;flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .adm-logo{height:24px;margin:9px 3px;object-fit:contain;}
@@ -151,10 +144,6 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .btn-h{padding:5px 10px;font-size:11px;font-weight:500;letter-spacing:.09em;border:none;cursor:pointer;transition:all .16s;}
 .btn-out{background:transparent;border:1px solid var(--border);color:var(--muted);}
 .btn-out:hover{color:var(--ink);border-color:var(--ink);}
-.btn-green{background:var(--green);color:white;}
-.btn-green:hover{background:var(--green-dk);}
-
-/* CLASS MANAGER */
 .class-mgr-grid{display:grid;gap:8px;margin-bottom:16px;}
 .class-mgr-item{background:var(--card);border:1px solid var(--border);padding:12px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
 .cmi-info{flex:1;min-width:180px;}
@@ -163,22 +152,19 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .cmi-time{font-family:var(--f-num);font-size:12px;color:var(--ink);margin-top:2px;}
 .cmi-cap{font-size:11px;color:var(--muted);}
 .cmi-actions{display:flex;gap:5px;flex-shrink:0;}
-.btn-edit{padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;transition:all .16s;}
+.btn-edit{padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;}
 .btn-edit:hover{border-color:var(--green);color:var(--green);}
-.btn-del{padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;transition:all .16s;}
+.btn-del{padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;}
 .btn-del:hover{border-color:var(--orange);color:var(--orange);}
 .add-class-form{background:var(--card);border:1px dashed var(--border);padding:16px;margin-top:8px;}
 .add-class-form h4{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--ink);margin-bottom:12px;}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:10px;}
 .form-group{display:flex;flex-direction:column;gap:4px;}
 .form-group label{font-size:10px;font-weight:600;letter-spacing:.12em;color:var(--muted);}
-.form-group input,.form-group select{padding:6px 8px;border:1px solid var(--border);background:var(--bg);font-family:var(--f-zh);font-size:12px;color:var(--ink);outline:none;transition:border-color .18s;}
-.form-group input:focus,.form-group select:focus{border-color:var(--ink);}
+.form-group input,.form-group select{padding:6px 8px;border:1px solid var(--border);background:var(--bg);font-family:var(--f-zh);font-size:12px;color:var(--ink);outline:none;}
 .form-group input[type=time]{font-family:var(--f-num);}
-.btn-add-class{padding:7px 16px;background:var(--ink);color:var(--cream);border:none;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .16s;}
+.btn-add-class{padding:7px 16px;background:var(--ink);color:var(--cream);border:none;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;}
 .btn-add-class:hover{background:var(--green);}
-
-/* BOOKING RECORDS */
 .bk-filter{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px;}
 .bk-filter select{padding:4px 8px;border:1px solid var(--border);background:var(--bg);font-size:12px;color:var(--ink);outline:none;}
 .bk-list{display:grid;gap:4px;}
@@ -192,55 +178,53 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
 .bk-status.cancelled{background:rgba(214,116,66,.09);color:var(--orange);}
 .bk-status.absent{background:rgba(28,42,34,.07);color:var(--muted);}
 .bk-actions{margin-left:auto;display:flex;gap:4px;}
-.btn-absent{padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:10px;cursor:pointer;transition:all .16s;}
+.btn-absent{padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:10px;cursor:pointer;}
 .btn-absent:hover{border-color:var(--orange);color:var(--orange);}
-.btn-cancel-bk{padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:10px;cursor:pointer;transition:all .16s;}
+.btn-cancel-bk{padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:10px;cursor:pointer;}
 .btn-cancel-bk:hover{border-color:var(--orange);color:var(--orange);}
-
-/* BLOCK LIST */
 .block-list{display:grid;gap:4px;}
 .block-item{background:var(--card);border:1px solid rgba(214,116,66,.2);padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .block-name{font-size:12px;font-weight:700;color:var(--ink);}
 .block-phone{font-family:var(--f-num);font-size:12px;color:var(--muted);}
 .block-count{font-size:11px;color:var(--orange);margin-left:auto;}
-.btn-unblock{padding:3px 10px;background:transparent;border:1px solid rgba(0,160,110,.3);color:var(--green);font-size:11px;cursor:pointer;transition:all .16s;}
+.btn-unblock{padding:3px 10px;background:transparent;border:1px solid rgba(0,160,110,.3);color:var(--green);font-size:11px;cursor:pointer;}
 .btn-unblock:hover{background:var(--green-dim);}
 
 /* MODALS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(28,42,34,.5);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
 .overlay.open{display:flex;}
 @keyframes mIn{from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
-.m-box{background:var(--bg);max-width:400px;width:100%;animation:mIn .22s ease;border-top:2px solid var(--green);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.m-box{background:var(--bg);max-width:420px;width:100%;animation:mIn .22s ease;border-top:2px solid var(--green);box-shadow:0 8px 28px rgba(0,0,0,.1);max-height:90vh;overflow-y:auto;}
 .m-inner{padding:24px 24px 20px;}
 .m-title{font-size:15px;font-weight:700;letter-spacing:.1em;color:var(--ink);margin-bottom:4px;}
 .m-desc{font-size:12px;color:var(--muted);margin-bottom:16px;letter-spacing:.05em;line-height:1.7;}
 .ff{margin-bottom:10px;}
 .fl{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;color:var(--muted);margin-bottom:5px;}
-.fi{width:100%;padding:8px 10px;border:1px solid var(--border);background:var(--card);font-size:13px;color:var(--ink);outline:none;transition:border-color .18s;}
+.fi{width:100%;padding:8px 10px;border:1px solid var(--border);background:var(--card);font-size:13px;color:var(--ink);outline:none;}
 .fi-phone{font-family:var(--f-num);}
 .fi:focus{border-color:var(--ink);}
 .fi-err{font-size:10px;color:var(--orange);margin-top:3px;min-height:13px;letter-spacing:.04em;}
 .m-btns{display:flex;gap:7px;margin-top:13px;}
-.btn-ok{flex:1;padding:9px;background:var(--green);color:white;border:none;font-size:12px;font-weight:700;letter-spacing:.11em;cursor:pointer;transition:all .16s;}
+.btn-ok{flex:1;padding:9px;background:var(--green);color:white;border:none;font-size:12px;font-weight:700;letter-spacing:.11em;cursor:pointer;}
 .btn-ok:hover{background:var(--green-dk);}
-.btn-no{flex:1;padding:9px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;letter-spacing:.07em;cursor:pointer;transition:all .16s;}
+.btn-no{flex:1;padding:9px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;cursor:pointer;}
 .btn-no:hover{border-color:var(--ink);color:var(--ink);}
 .success-overlay{display:none;position:fixed;inset:0;background:rgba(28,42,34,.55);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .success-overlay.open{display:flex;}
 .success-box{background:var(--bg);max-width:320px;width:calc(100% - 40px);padding:30px 26px;text-align:center;animation:mIn .24s ease;border-top:3px solid var(--green);box-shadow:0 10px 36px rgba(0,0,0,.11);}
 .success-icon{font-size:32px;margin-bottom:9px;}
 .success-title{font-size:16px;font-weight:700;letter-spacing:.1em;color:var(--green);margin-bottom:7px;}
-.success-detail{font-size:12px;color:var(--muted);letter-spacing:.05em;line-height:1.8;margin-bottom:16px;}
-.btn-success-close{padding:9px 24px;background:var(--green);color:white;border:none;font-size:12px;font-weight:700;letter-spacing:.11em;cursor:pointer;}
+.success-detail{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:16px;}
+.btn-success-close{padding:9px 24px;background:var(--green);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;}
 .c-box{background:var(--bg);max-width:340px;width:calc(100% - 40px);animation:mIn .22s ease;border-top:2px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.1);}
 .c-inner{padding:22px 20px 18px;}
-.c-title{font-size:14px;font-weight:700;letter-spacing:.09em;color:var(--ink);margin-bottom:7px;}
-.c-body{font-size:12px;color:var(--muted);letter-spacing:.04em;line-height:1.78;margin-bottom:15px;}
+.c-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:7px;}
+.c-body{font-size:12px;color:var(--muted);line-height:1.78;margin-bottom:15px;}
 .c-btns{display:flex;gap:6px;}
-.btn-act{flex:1;padding:9px;color:white;border:none;font-size:12px;font-weight:700;letter-spacing:.09em;cursor:pointer;}
+.btn-act{flex:1;padding:9px;color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;}
 .btn-act-c{flex:1;padding:9px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;cursor:pointer;}
 .btn-act-c:hover{border-color:var(--ink);color:var(--ink);}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(64px);background:var(--ink);color:var(--cream);padding:8px 16px;font-size:12px;letter-spacing:.09em;z-index:9999;transition:transform .3s ease;pointer-events:none;white-space:nowrap;border-left:2px solid var(--green);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(64px);background:var(--ink);color:var(--cream);padding:8px 16px;font-size:12px;z-index:9999;transition:transform .3s ease;pointer-events:none;white-space:nowrap;border-left:2px solid var(--green);}
 .toast.show{transform:translateX(-50%) translateY(0);}
 @media(max-width:600px){
   .l-btns{flex-direction:column;align-items:stretch;max-width:220px;}
@@ -337,11 +321,11 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     </div>
     <div class="adm-panel active" id="adm-classes">
       <div class="class-mgr-grid" id="class-mgr-list"></div>
-      <div class="add-class-form" id="add-class-form">
+      <div class="add-class-form">
         <h4>＋ 新增課程</h4>
         <div class="form-grid">
           <div class="form-group"><label>課程名稱</label><input type="text" id="nc-name" placeholder="例：核心訓練"></div>
-          <div class="form-group"><label>教練名稱</label><input type="text" id="nc-coach" placeholder="例：Momo"></div>
+          <div class="form-group"><label>教練名稱</label><input type="text" id="nc-coach" placeholder="例：Kenny"></div>
           <div class="form-group"><label>星期幾</label>
             <select id="nc-day">
               <option value="1">週一</option><option value="2">週二</option><option value="3">週三</option>
@@ -357,15 +341,10 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     </div>
     <div class="adm-panel" id="adm-bookings">
       <div class="bk-filter">
-        <span style="font-size:11px;color:var(--muted);letter-spacing:.09em;">篩選：</span>
-        <select id="adm-filter-class" onchange="renderAdmBookings()">
-          <option value="">全部課程</option>
-        </select>
+        <span style="font-size:11px;color:var(--muted);">篩選：</span>
+        <select id="adm-filter-class" onchange="renderAdmBookings()"><option value="">全部課程</option></select>
         <select id="adm-filter-status" onchange="renderAdmBookings()">
-          <option value="">全部狀態</option>
-          <option value="有效">有效</option>
-          <option value="已取消">已取消</option>
-          <option value="未到">未到</option>
+          <option value="">全部狀態</option><option value="有效">有效</option><option value="已取消">已取消</option><option value="未到">未到</option>
         </select>
       </div>
       <div class="bk-list" id="adm-bk-list"></div>
@@ -414,21 +393,22 @@ body{font-family:var(--f-zh);background:var(--bg);color:var(--ink);min-height:10
     <label class="fl">Email（必填，收報名確認信）</label>
     <input type="email" class="fi" id="book-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')confirmBooking()">
   </div>
-  <div class="ff" style="background:rgba(214,116,66,.04);border:1px solid rgba(214,116,66,.18);padding:10px 12px;margin-bottom:10px;">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--orange);margin-bottom:7px;">📋 報名注意事項</div>
-    <div style="font-size:11px;color:var(--ink);line-height:1.85;letter-spacing:.04em;">
-      📅 <strong>取消期限：</strong>課前 8 小時內無法取消<br>
-      ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次及課間中途無故離場，暫停線上預約權限<br>
-      👟 <strong>服裝要求：</strong>請穿著運動服飾與運動鞋<br>
-      🕐 <strong>準時入場：</strong>開課後 5–10 分鐘禁止入場<br>
-      🏥 <strong>身體狀況：</strong>懷孕、舊傷或身體不適請事先告知教練
-    </div>
-    <div style="margin-top:10px;display:flex;align-items:flex-start;gap:7px;">
-      <input type="checkbox" id="agree-terms" style="margin-top:2px;accent-color:var(--green);width:14px;height:14px;flex-shrink:0;">
-      <label for="agree-terms" style="font-size:11px;color:var(--ink);cursor:pointer;line-height:1.5;">我已閱讀並同意以上注意事項</label>
-    </div>
-    <div class="fi-err" id="agree-err" style="margin-top:4px;"></div>
-  </div>
+  
+      <div class="ff" style="background:rgba(214,116,66,.04);border:1px solid rgba(214,116,66,.18);padding:10px 12px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--orange);margin-bottom:7px;">📋 報名注意事項</div>
+        <div style="font-size:11px;color:var(--ink);line-height:1.85;letter-spacing:.04em;">
+          📅 <strong>取消期限：</strong>課前 8 小時內無法取消<br>
+          ⚠️ <strong>違規處罰：</strong>遲到、缺席或逾時取消累積 3 次及課間中途無故離場，暫停線上預約權限<br>
+          👟 <strong>服裝要求：</strong>請穿著運動服飾與運動鞋<br>
+          🕐 <strong>準時入場：</strong>開課後 5–10 分鐘禁止入場<br>
+          🏥 <strong>身體狀況：</strong>懷孕、舊傷或身體不適請事先告知教練
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:flex-start;gap:7px;">
+          <input type="checkbox" id="agree-terms" style="margin-top:2px;accent-color:var(--green);width:14px;height:14px;flex-shrink:0;">
+          <label for="agree-terms" style="font-size:11px;color:var(--ink);cursor:pointer;line-height:1.5;">我已閱讀並同意以上注意事項</label>
+        </div>
+        <div class="fi-err" id="agree-err" style="margin-top:4px;"></div>
+      </div>
   <div class="m-btns">
     <button class="btn-ok" id="book-ok-btn" onclick="confirmBooking()">確認報名</button>
     <button class="btn-no" onclick="closeBookingModal()">取消</button>
@@ -460,17 +440,12 @@ const API_URL='https://script.google.com/macros/s/AKfycbzDsoY3T-kzO5AshHngE-Y5lL
 const TW_PHONE=/^09\d{8}$/;
 const DAY_ZH=['日','一','二','三','四','五','六'];
 const DAY_FULL=['週日','週一','週二','週三','週四','週五','週六'];
-const ABSENT_LIMIT=3; // 連續未到幾次封鎖
+const ABSENT_LIMIT=3;
 
-let classes=[];      // 課程清單（從 Sheets 載入）
-let bookings={};     // key -> [{name,phone,time}]
-let blocklist={};    // phone -> {name,count,blocked}
-let waitlist={};     // key -> [{name,phone,email}]
-let currentWeek=0;
-let pendingBook=null,pendingAct=null;
+let classes=[],bookings={},blocklist={},waitlist={};
+let currentWeek=0,pendingBook=null,pendingAct=null,pendingWaitlist=null;
 let isSubmitting=false;
 
-// ── API ──────────────────────────────────────────────
 async function api(action,params={}){
   const body=JSON.stringify({action,...params});
   try{
@@ -485,62 +460,41 @@ async function loadAll(){
   showLoading();
   try{
     const r=await api('getAll');
-    if(r.ok){
-      classes=r.classes||[];
-      bookings=r.bookings||{};
-      blocklist=r.blocklist||{};
-      waitlist=r.waitlist||{};
-    }
+    if(r.ok){classes=r.classes||[];bookings=r.bookings||{};blocklist=r.blocklist||{};waitlist=r.waitlist||{};}
   }catch(e){console.error(e);}
   hideLoading();
 }
 
-// ── UTILS ────────────────────────────────────────────
+// ── UTILS ──────────────────────────────────────────────────────
 function parseDateStr(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function ds(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function getWeekDates(off){
   const base=new Date();base.setHours(0,0,0,0);
   const day=base.getDay();
-  const mon=new Date(base);mon.setDate(base.getDate()-day+1+(off*7));
+  const mon=new Date(base);mon.setDate(base.getDate()-(day===0?6:day-1)+(off*7));
   return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
 }
 function weekLabel(off){const w=getWeekDates(off);const f=d=>`${d.getMonth()+1}/${d.getDate()}`;return `${f(w[0])} — ${f(w[6])}`;}
 function slotKey(dateStr,classId){return `${dateStr}__${classId}`;}
-function slotDT(dateStr,timeStr){
-  const[h,m]=(timeStr||'00:00').split(':').map(Number);
-  const d=parseDateStr(dateStr);d.setHours(h,m,0,0);return d;
-}
+function slotDT(dateStr,timeStr){const[h,m]=(timeStr||'00:00').split(':').map(Number);const d=parseDateStr(dateStr);d.setHours(h,m,0,0);return d;}
 function isExpired(dateStr,t){return slotDT(dateStr,t)<new Date();}
-function isWithinTwoWeeks(date){
-  const now=new Date();
-  // 本週一（00:00）
-  const dayOfWeek=now.getDay()||7; // 週日=7
-  const thisMonday=new Date(now);thisMonday.setDate(now.getDate()-dayOfWeek+1);thisMonday.setHours(0,0,0,0);
-  // 本週日（結束）
-  const thisSunday=new Date(thisMonday);thisSunday.setDate(thisMonday.getDate()+6);thisSunday.setHours(23,59,59,999);
-  // 下週日（結束）
-  const nextSunday=new Date(thisMonday);nextSunday.setDate(thisMonday.getDate()+13);nextSunday.setHours(23,59,59,999);
-
-  // 判斷今天是否為週一且已過12:00
-  const isMonday=now.getDay()===1;
-  const isPastNoon=now.getHours()>=12;
-  const nextWeekOpen=isMonday&&isPastNoon; // 週一12:00後才開放下週
-
-  if(nextWeekOpen){
-    // 本週＋下週
-    return date>=thisMonday&&date<=nextSunday;
-  } else {
-    // 只有本週
-    return date>=thisMonday&&date<=thisSunday;
-  }
-}
 function isBefore8h(dateStr,t){return(slotDT(dateStr,t)-new Date())<8*3600000;}
 function canCancel(dateStr,t){return(slotDT(dateStr,t)-new Date())>8*3600000;}
 function countBk(dateStr,classId){const k=slotKey(dateStr,classId);const b=bookings[k];if(!b)return 0;return Array.isArray(b)?b.length:1;}
-function normalizePhone(s){if(!s)return'';let d=String(s).replace(/\D/g,'');if(d.length===9&&d[0]==='9')d='0'+d;return d;}
-function isBlocked(phone){const p=normalizePhone(phone);const b=blocklist[p];return b&&b.blocked;}
+function normalizePhoneJS(s){if(!s)return'';let d=String(s).replace(/\D/g,'');if(d.length===9&&d[0]==='9')d='0'+d;return d;}
+function isBlocked(phone){const p=normalizePhoneJS(phone);const b=blocklist[p];return b&&b.blocked;}
+function isWithinTwoWeeks(date){
+  const now=new Date();
+  const dow=now.getDay();
+  const thisMonday=new Date(now);thisMonday.setDate(now.getDate()-(dow===0?6:dow-1));thisMonday.setHours(0,0,0,0);
+  const thisSunday=new Date(thisMonday);thisSunday.setDate(thisMonday.getDate()+6);thisSunday.setHours(23,59,59,999);
+  const nextSunday=new Date(thisMonday);nextSunday.setDate(thisMonday.getDate()+13);nextSunday.setHours(23,59,59,999);
+  const isMonday=dow===1;
+  const isPastNoon=now.getHours()>=12;
+  return (isMonday&&isPastNoon)?(date>=thisMonday&&date<=nextSunday):(date>=thisMonday&&date<=thisSunday);
+}
 
-// ── SCREEN ───────────────────────────────────────────
+// ── SCREEN ─────────────────────────────────────────────────────
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -550,22 +504,18 @@ function showScreen(id){
   if(id==='admin-view'){loadAll().then(renderAdminView);}
 }
 
-// ── MEMBER VIEW ──────────────────────────────────────
+// ── MEMBER VIEW ─────────────────────────────────────────────────
 function changeWeek(d){
   const next=currentWeek+d;
   if(next<0){showToast('已是最早的週次');return;}
-  // 判斷最多可切換到哪週
   const now=new Date();
   const isMonday=now.getDay()===1;
   const isPastNoon=now.getHours()>=12;
   const maxWeek=(isMonday&&isPastNoon)?1:0;
-  if(next>maxWeek){
-    if(maxWeek===0){showToast('下週預約將於週一中午12:00開放');}
-    else{showToast('目前僅開放本週及下週預約');}
-    return;
-  }
+  if(next>maxWeek){showToast(maxWeek===0?'下週預約將於週一中午12:00開放':'目前僅開放本週及下週預約');return;}
   currentWeek=next;renderMemberView();
 }
+
 function renderMemberView(){
   document.getElementById('week-label').textContent=weekLabel(currentWeek);
   const dates=getWeekDates(currentWeek);
@@ -576,7 +526,7 @@ function renderMemberView(){
     if(dayClasses.length>0)byDay[dn]={date,classes:dayClasses};
   });
   let html='';
-  Object.keys(byDay).sort((a,b)=>a-b).forEach(dn=>{
+  Object.keys(byDay).sort((a,b)=>{const oa=a==0?7:+a,ob=b==0?7:+b;return oa-ob;}).forEach(dn=>{
     const{date,classes:dc}=byDay[dn];
     const dKey=ds(date);
     const dLbl=`${DAY_FULL[dn]}　${date.getMonth()+1}/${date.getDate()}`;
@@ -588,28 +538,32 @@ function renderMemberView(){
       const past=isExpired(dKey,c.start);
       const closed=!past&&isBefore8h(dKey,c.start);
       const full=!past&&!closed&&rem<=0;
-      // 兩週限制：只有本週和下週的課程可預約
       const notOpen=!past&&!isWithinTwoWeeks(date);
+      const canWaitlist=!past&&!closed&&!notOpen&&full;
       const open=!past&&!closed&&!full&&!notOpen;
-      const canWaitlist=!past&&!closed&&!notOpen&&full; // 額滿時可候補
       const key=slotKey(dKey,c.id);
       const wlCount=(waitlist[key]||[]).length;
-      let cls='class-card cc-open',status='可報名',dotCls='cc-open';
-      if(past){cls='class-card cc-past';status='已結束';}
-      else if(notOpen){cls='class-card cc-closed';status='尚未開放';}
-      else if(closed){cls='class-card cc-closed';status='截止報名';}
-      else if(full&&!canWaitlist){cls='class-card cc-full';status='已額滿';}
-      else if(canWaitlist){cls='class-card cc-waitlist';status='已額滿';}
-      const clk=open?`onclick="openBookModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}',${cap})"`:
-                  canWaitlist?`onclick="openWaitlistModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}')"`:''';
-      const wlInfo=canWaitlist&&wlCount>0?`<div class="waitlist-count">候補中：${wlCount} 人</div>`:'';
-      const wlBtn=canWaitlist?`<div style="font-size:12px;color:var(--orange);font-weight:700;margin-top:4px;">＋ 加入候補</div>`:'';
+      let cls='class-card cc-open';
+      if(past)cls='class-card cc-past';
+      else if(notOpen)cls='class-card cc-closed';
+      else if(closed)cls='class-card cc-closed';
+      else if(canWaitlist)cls='class-card cc-waitlist';
+      else if(full)cls='class-card cc-full';
+      const clk=open
+        ? `onclick="openBookModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}',${cap})"`
+        : canWaitlist
+          ? `onclick="openWaitlistModal('${dKey}','${c.id}','${c.name}','${c.coach}','${c.start}','${c.end}')"`
+          : '';
+      const slotsHtml=past?'<div class="cc-slots"><span class="cc-dot"></span>已結束</div>'
+        :notOpen?'<div class="cc-slots"><span class="cc-dot"></span>尚未開放</div>'
+        :closed?'<div class="cc-slots"><span class="cc-dot"></span>截止報名</div>'
+        :full?`<div class="cc-slots">已額滿</div>${wlCount>0?`<div class="waitlist-count">候補中：${wlCount} 人</div>`:''}<div style="font-size:12px;color:var(--orange);font-weight:700;margin-top:4px;">＋ 加入候補</div>`
+        :`<div class="cc-slots">已預約 ${cnt} 位</div><div class="cc-slots">剩餘 ${rem} 位名額</div>`;
       html+=`<div class="${cls}" ${clk}>
         <div class="cc-name">${c.name}</div>
         <div class="cc-coach">教練：${c.coach}</div>
         <div class="cc-time">${c.start} – ${c.end}</div>
-        <div class="cc-slots ${dotCls}"><span class="cc-dot"></span>${past?'已結束':closed?'截止報名':notOpen?'尚未開放':full?'已額滿':`已預約 ${cnt} 位</div><div class="cc-slots cc-open"><span class="cc-dot"></span>剩餘 ${rem} 位名額`}</div>
-        ${wlInfo}${wlBtn}
+        ${slotsHtml}
       </div>`;
     });
     html+=`</div></div>`;
@@ -618,46 +572,44 @@ function renderMemberView(){
   document.getElementById('class-schedule').innerHTML=html;
 }
 
-// ── MY BOOKINGS ──────────────────────────────────────
+// ── MY BOOKINGS ─────────────────────────────────────────────────
 async function mbSearch(){
-  const phone=document.getElementById('mb-phone').value.trim();
+  const phoneInput=document.getElementById('mb-phone').value.trim();
   const err=document.getElementById('mb-phone-err');
   const res=document.getElementById('mb-result');
-  if(!TW_PHONE.test(phone)){err.textContent='請輸入正確台灣手機格式（09開頭，共10碼）';return;}
+  if(!TW_PHONE.test(phoneInput)){err.textContent='請輸入正確台灣手機格式（09開頭，共10碼）';return;}
   err.textContent='';
   showLoading();await loadAll();hideLoading();
-  // 檢查是否被封鎖
-  if(isBlocked(phone)){
+  if(isBlocked(phoneInput)){
     res.innerHTML=`<div class="blocked-notice">⚠ 您的手機號碼因連續3次未到已被停止預約資格。<br>如有疑問請洽門市解除封鎖。</div>`;
     return;
   }
+  const target=normalizePhoneJS(phoneInput);
   const found=[];
   Object.entries(bookings).forEach(([key,val])=>{
     const items=Array.isArray(val)?val:[val];
     items.forEach(b=>{
-      if(b&&normalizePhone(b.phone)===normalizePhone(phone)){
+      if(b&&normalizePhoneJS(b.phone)===target){
         const[dateStr,classId]=key.split('__');
         const cls=classes.find(c=>c.id===classId)||{name:classId,coach:'',start:'',end:''};
-        found.push({key,dateStr,classId,cls,name:b.name,storedPhone:b.phone});
+        found.push({key,dateStr,cls,name:b.name,storedPhone:b.phone});
       }
     });
   });
-  // 也找候補紀錄
   const wlFound=[];
   Object.entries(waitlist).forEach(([key,wlList])=>{
     (wlList||[]).forEach(w=>{
       if(normalizePhoneJS(w.phone)===target){
         const[dateStr,classId]=key.split('__');
         const cls=classes.find(c=>c.id===classId)||{name:classId,coach:'',start:'',end:''};
-        wlFound.push({key,dateStr,cls,name:w.name,storedPhone:w.phone,isWaitlist:true});
+        wlFound.push({key,dateStr,cls,name:w.name,storedPhone:w.phone});
       }
     });
   });
-
   const active=found.filter(f=>!isExpired(f.dateStr,f.cls.start)).sort((a,b)=>slotDT(a.dateStr,a.cls.start)-slotDT(b.dateStr,b.cls.start));
-  if(!active.length){res.innerHTML=`<div class="mb-empty">查無有效預約紀錄</div>`;return;}
   const activeWl=wlFound.filter(f=>!isExpired(f.dateStr,f.cls.start));
-  res.innerHTML=[...active.map(f=>{
+  if(!active.length&&!activeWl.length){res.innerHTML=`<div class="mb-empty">查無有效預約紀錄</div>`;return;}
+  const activeHtml=active.map(f=>{
     const canC=canCancel(f.dateStr,f.cls.start);
     const dObj=parseDateStr(f.dateStr);
     const dLbl=`${dObj.getMonth()+1}/${dObj.getDate()}（${DAY_ZH[dObj.getDay()]}）`;
@@ -669,7 +621,8 @@ async function mbSearch(){
         ${!canC?`<span class="mb-cancel-note">距開課不足8小時，無法取消</span>`:''}
       </div>
     </div>`;
-  }), ...activeWl.map(f=>{
+  });
+  const wlHtml=activeWl.map(f=>{
     const dObj=parseDateStr(f.dateStr);
     const dLbl=`${dObj.getMonth()+1}/${dObj.getDate()}（${DAY_ZH[dObj.getDay()]}）`;
     return `<div class="mb-item" style="border-color:rgba(214,116,66,.25);">
@@ -679,39 +632,82 @@ async function mbSearch(){
         <button class="btn-mb-cancel" onclick="cancelWaitlist('${f.key}','${f.storedPhone}')">取消候補</button>
       </div>
     </div>`;
-  })].join('');
+  });
+  res.innerHTML=[...activeHtml,...wlHtml].join('');
 }
 
-// ── BOOK MODAL ───────────────────────────────────────
+// ── WAITLIST ────────────────────────────────────────────────────
+function openWaitlistModal(dateStr,classId,name,coach,start,end){
+  pendingWaitlist={dateStr,classId,name,coach,start,end};
+  document.getElementById('wl-class-info').textContent=`${name}　教練：${coach}　${dateStr.slice(5).replace('-','/')} ${start}–${end}`;
+  ['wl-name','wl-phone','wl-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('wl-phone-err').textContent='';
+  const btn=document.getElementById('wl-ok-btn');
+  btn.disabled=false;btn.style.opacity='1';btn.textContent='加入候補';
+  document.getElementById('waitlist-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('wl-name').focus(),80);
+}
+function closeWaitlistModal(){document.getElementById('waitlist-modal').classList.remove('open');pendingWaitlist=null;}
+async function confirmWaitlist(){
+  const name=document.getElementById('wl-name').value.trim();
+  const phone=document.getElementById('wl-phone').value.trim();
+  const email=document.getElementById('wl-email').value.trim();
+  const perr=document.getElementById('wl-phone-err');
+  if(!name){showToast('請輸入姓名');return;}
+  if(!TW_PHONE.test(phone)){perr.textContent='請輸入正確台灣手機格式';return;}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showToast('請輸入正確 Email');return;}
+  perr.textContent='';
+  if(!pendingWaitlist)return;
+  const{dateStr,classId}=pendingWaitlist;
+  const key=slotKey(dateStr,classId);
+  const btn=document.getElementById('wl-ok-btn');
+  btn.disabled=true;btn.style.opacity='.5';btn.textContent='送出中…';
+  showLoading();
+  const r=await api('addWaitlist',{key,name,phone,email});
+  hideLoading();
+  if(!r.ok){showToast('加入失敗：'+(r.msg||''));btn.disabled=false;btn.style.opacity='1';btn.textContent='加入候補';return;}
+  closeWaitlistModal();
+  showToast('✓ 已加入候補名單，有名額釋出時將 Email 通知您');
+  if(!waitlist[key])waitlist[key]=[];
+  waitlist[key].push({name,phone,email});
+  renderMemberView();
+}
+async function cancelWaitlist(key,phone){
+  if(!confirm('確認取消候補？'))return;
+  showLoading();
+  const r=await api('removeWaitlist',{key,phone});
+  hideLoading();
+  if(r.ok){
+    showToast('✓ 已取消候補');
+    if(waitlist[key])waitlist[key]=waitlist[key].filter(w=>normalizePhoneJS(w.phone)!==normalizePhoneJS(phone));
+    mbSearch();
+  }else showToast('❌ 取消失敗：'+(r.msg||''));
+}
+
+// ── BOOK MODAL ──────────────────────────────────────────────────
 function openBookModal(dateStr,classId,name,coach,start,end,cap){
   pendingBook={dateStr,classId,name,coach,start,end,cap};
   document.getElementById('modal-class-info').textContent=`${name}　教練：${coach}　${dateStr.slice(5).replace('-','/')} ${start}–${end}`;
-  document.getElementById('book-name').value='';
-  document.getElementById('book-phone').value='';
-  document.getElementById('book-email').value='';
+  ['book-name','book-phone','book-email'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('book-phone-err').textContent='';
+  document.getElementById('agree-err').textContent='';
   const agreeBox=document.getElementById('agree-terms');if(agreeBox)agreeBox.checked=false;
-  const agreeErr=document.getElementById('agree-err');if(agreeErr)agreeErr.textContent='';
   const btn=document.getElementById('book-ok-btn');
   btn.disabled=false;btn.style.opacity='1';btn.textContent='確認報名';
   document.getElementById('booking-modal').classList.add('open');
   setTimeout(()=>document.getElementById('book-name').focus(),80);
 }
 function closeBookingModal(){document.getElementById('booking-modal').classList.remove('open');pendingBook=null;}
-
 async function confirmBooking(){
   if(isSubmitting)return;
   const name=document.getElementById('book-name').value.trim();
   const phone=document.getElementById('book-phone').value.trim();
   const email=document.getElementById('book-email').value.trim();
-  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    document.getElementById('book-phone-err').textContent='';
-    showToast('請輸入正確的 Email 格式');return;
-  }
   const perr=document.getElementById('book-phone-err');
   if(!name){showToast('請輸入姓名');return;}
   if(!TW_PHONE.test(phone)){perr.textContent='請輸入正確台灣手機格式（09開頭，共10碼）';return;}
   perr.textContent='';
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showToast('請輸入正確的 Email 格式');return;}
   const agreeChk=document.getElementById('agree-terms');
   const agreeErrEl=document.getElementById('agree-err');
   if(agreeChk&&!agreeChk.checked){if(agreeErrEl)agreeErrEl.textContent='請先勾選同意注意事項';return;}
@@ -730,14 +726,14 @@ async function confirmBooking(){
   const r=await api('addBooking',{key,classId,name,phone,email,cap,dateStr,start});
   hideLoading();
   if(!r.ok){
-    showToast('報名失敗：'+(r.msg||'請稍後再試'));
+    showToast('報名失敗：'+(r.msg||''));
     isSubmitting=false;btn.disabled=false;btn.style.opacity='1';btn.textContent='確認報名';
     return;
   }
-  const entry={name,phone,time:new Date().toISOString()};
+  const entry={name,phone,email,time:new Date().toISOString()};
   if(!bookings[key])bookings[key]=[];
   if(!Array.isArray(bookings[key]))bookings[key]=[bookings[key]];
-  if(!bookings[key].find(b=>normalizePhone(b.phone)===normalizePhone(phone)))bookings[key].push(entry);
+  if(!bookings[key].find(b=>normalizePhoneJS(b.phone)===normalizePhoneJS(phone)))bookings[key].push(entry);
   isSubmitting=false;
   closeBookingModal();
   document.getElementById('success-detail').innerHTML=`<div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:4px;">${cName}</div><div>教練：${coach}</div><div style="font-family:var(--f-num);">${dateStr.slice(5).replace('-','/')} ${start}–${end}</div><div style="margin-top:5px;font-size:11px;">姓名：${name}</div>`;
@@ -745,7 +741,7 @@ async function confirmBooking(){
   renderMemberView();
 }
 
-// ── ACTION MODAL ─────────────────────────────────────
+// ── ACTION MODAL ────────────────────────────────────────────────
 function openActModal(type,key,title,desc,phone,bkIdx){
   pendingAct={type,key,title,desc,phone:phone||null,bkIdx:bkIdx!==undefined?+bkIdx:0};
   const T=document.getElementById('action-title'),B=document.getElementById('action-body'),btn=document.getElementById('action-ok-btn');
@@ -756,7 +752,6 @@ function openActModal(type,key,title,desc,phone,bkIdx){
   document.getElementById('action-modal').classList.add('open');
 }
 function closeActionModal(){document.getElementById('action-modal').classList.remove('open');pendingAct=null;}
-
 async function executeAction(){
   if(!pendingAct)return;
   const{type,key,phone,bkIdx,desc}=pendingAct;
@@ -765,10 +760,10 @@ async function executeAction(){
   if(type==='memberCancel'){
     r=await api('cancelBooking',{key,phone,cancelledBy:'member'});
     if(r.ok){
-      if(Array.isArray(bookings[key])){bookings[key]=bookings[key].filter(b=>normalizePhone(b.phone)!==normalizePhone(phone));if(!bookings[key].length)delete bookings[key];}
+      if(Array.isArray(bookings[key])){bookings[key]=bookings[key].filter(b=>normalizePhoneJS(b.phone)!==normalizePhoneJS(phone));if(!bookings[key].length)delete bookings[key];}
       else delete bookings[key];
       showToast('✓ 已取消報名');
-    }else showToast('❌ 取消失敗：'+(r.msg||'未知錯誤'));
+    }else showToast('❌ 取消失敗：'+(r.msg||''));
   }else if(type==='adminCancel'){
     const bArr=Array.isArray(bookings[key])?bookings[key]:(bookings[key]?[bookings[key]]:[]);
     const bPhone=bArr[bkIdx]?.phone;
@@ -782,13 +777,11 @@ async function executeAction(){
     const bArr=Array.isArray(bookings[key])?bookings[key]:(bookings[key]?[bookings[key]]:[]);
     const b=bArr[bkIdx];
     r=await api('markAbsent',{key,phone:b?.phone,name:b?.name,bkIdx});
-    if(r.ok){
-      showToast('✓ 已標記未到'+(r.blocked?'，該會員已被封鎖':''));
-      await loadAll();
-    }else showToast('❌ 失敗：'+(r.msg||''));
+    if(r.ok){showToast('✓ 已標記未到'+(r.blocked?'，該會員已被封鎖':''));await loadAll();}
+    else showToast('❌ 失敗：'+(r.msg||''));
   }else if(type==='unblock'){
     r=await api('unblock',{phone});
-    if(r.ok){delete blocklist[normalizePhone(phone)];showToast('✓ 已解除封鎖');}
+    if(r.ok){delete blocklist[normalizePhoneJS(phone)];showToast('✓ 已解除封鎖');}
     else showToast('❌ 失敗：'+(r.msg||''));
   }
   hideLoading();closeActionModal();
@@ -796,7 +789,7 @@ async function executeAction(){
   renderAdmBookings();renderBlockList();
 }
 
-// ── ADMIN ─────────────────────────────────────────────
+// ── ADMIN ───────────────────────────────────────────────────────
 async function doAdminLogin(){
   const pw=document.getElementById('admin-pw').value;
   const err=document.getElementById('admin-login-error');
@@ -813,15 +806,14 @@ function switchAdmTab(name,el){
   el.classList.add('active');document.getElementById('adm-'+name).classList.add('active');
 }
 function renderAdminView(){renderClassManager();renderAdmBookings();renderBlockList();}
-
 function renderClassManager(){
   const list=document.getElementById('class-mgr-list');
-  if(!classes.length){list.innerHTML=`<div style="font-size:12px;color:var(--muted);padding:8px 0;letter-spacing:.07em;">尚無課程，請在下方新增。</div>`;return;}
-  list.innerHTML=classes.map((c,i)=>`
+  if(!classes.length){list.innerHTML=`<div style="font-size:12px;color:var(--muted);padding:8px 0;">尚無課程，請在下方新增。</div>`;return;}
+  list.innerHTML=classes.map(c=>`
     <div class="class-mgr-item">
       <div class="cmi-info">
         <div class="cmi-name">${c.name}</div>
-        <div class="cmi-meta">教練：${c.coach}　${DAY_FULL[parseInt(c.day)]}</div>
+        <div class="cmi-meta">教練：${c.coach}　${DAY_FULL[parseInt(c.day)]||'週?'}</div>
         <div class="cmi-time">${c.start} – ${c.end}</div>
         <div class="cmi-cap">人數上限：${c.cap} 人</div>
       </div>
@@ -830,7 +822,6 @@ function renderClassManager(){
       </div>
     </div>`).join('');
 }
-
 async function addNewClass(){
   const name=document.getElementById('nc-name').value.trim();
   const coach=document.getElementById('nc-coach').value.trim();
@@ -849,23 +840,19 @@ async function addNewClass(){
   document.getElementById('nc-name').value='';
   document.getElementById('nc-coach').value='';
 }
-
 async function deleteClass(id){
-  if(!confirm('確認刪除這堂課程？相關預約紀錄不會被刪除。'))return;
+  if(!confirm('確認刪除這堂課程？'))return;
   showLoading();
   const r=await api('deleteClass',{id});
   hideLoading();
   if(!r.ok){showToast('刪除失敗：'+(r.msg||''));return;}
   showToast('✓ 已刪除');await loadAll();renderClassManager();
 }
-
 function renderAdmBookings(){
   const filterC=document.getElementById('adm-filter-class')?.value||'';
   const filterS=document.getElementById('adm-filter-status')?.value||'';
   const sel=document.getElementById('adm-filter-class');
-  if(sel&&sel.options.length===1){
-    classes.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});
-  }
+  if(sel&&sel.options.length===1){classes.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});}
   const list=[];
   Object.entries(bookings).forEach(([key,val])=>{
     const[dateStr,classId]=key.split('__');
@@ -874,11 +861,11 @@ function renderAdmBookings(){
     const bArr=Array.isArray(val)?val:[val];
     bArr.forEach((b,i)=>{if(b)list.push({key,dateStr,classId,cls,name:b.name,phone:b.phone,status:b.status||'有效',idx:i});});
   });
-  if(filterS)list.filter(i=>i.status===filterS);
-  list.sort((a,b)=>slotDT(a.dateStr,a.cls.start)-slotDT(b.dateStr,b.cls.start));
+  const filtered=filterS?list.filter(i=>i.status===filterS):list;
+  filtered.sort((a,b)=>slotDT(a.dateStr,a.cls.start)-slotDT(b.dateStr,b.cls.start));
   const el=document.getElementById('adm-bk-list');
-  if(!list.length){el.innerHTML=`<div style="text-align:center;padding:26px 0;color:var(--muted);font-size:12px;">暫無紀錄</div>`;return;}
-  el.innerHTML=list.map(f=>{
+  if(!filtered.length){el.innerHTML=`<div style="text-align:center;padding:26px 0;color:var(--muted);font-size:12px;">暫無紀錄</div>`;return;}
+  el.innerHTML=filtered.map(f=>{
     const exp=isExpired(f.dateStr,f.cls.start);
     const stCls=f.status==='有效'?'valid':f.status==='已取消'?'cancelled':'absent';
     return `<div class="bk-item" style="${exp?'opacity:.45':''}">
@@ -894,7 +881,6 @@ function renderAdmBookings(){
     </div>`;
   }).join('');
 }
-
 function renderBlockList(){
   const el=document.getElementById('block-list');
   const blocked=Object.entries(blocklist).filter(([,b])=>b.blocked);
@@ -908,20 +894,16 @@ function renderBlockList(){
     </div>`).join('');
 }
 
-async function cancelWaitlist(key,phone){
-  if(!confirm('確認取消候補？'))return;
-  showLoading();
-  const r=await api('removeWaitlist',{key,phone});
-  hideLoading();
-  if(r.ok){
-    showToast('✓ 已取消候補');
-    if(waitlist[key])waitlist[key]=waitlist[key].filter(w=>normalizePhoneJS(w.phone)!==normalizePhoneJS(phone));
-    mbSearch();
-  } else showToast('❌ 取消失敗：'+(r.msg||''));
-}
-
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600);}
-['booking-modal','action-modal','waitlist-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget){if(id==='booking-modal')closeBookingModal();else closeActionModal();}});});
+['booking-modal','action-modal','waitlist-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===e.currentTarget){
+      if(id==='booking-modal')closeBookingModal();
+      else if(id==='waitlist-modal')closeWaitlistModal();
+      else closeActionModal();
+    }
+  });
+});
 document.addEventListener('DOMContentLoaded',()=>{});
 </script>
 </body>
